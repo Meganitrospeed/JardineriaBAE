@@ -1,0 +1,77 @@
+-- 1 Mostrar toda la información de todos los empleados.
+SELECT * from Empleados;
+-- 2 Mostrar el código de cliente y su nombre
+SELECT CodigoCliente, NombreCliente from Clientes;
+-- 3 Cuántos clientes hay registrados en la compañía.
+SELECT COUNT(CodigoCliente) AS "Cantidad de clientes" from Clientes;
+
+-- 4 Mostrar el nombre de las ciudades donde hay clientes ordenado alfabéticamente.
+SELECT DISTINCT Clientes.Ciudad from Clientes JOIN Oficinas O on Clientes.Ciudad = O.Ciudad ORDER BY Clientes.Ciudad ASC;
+-- 5 Cuántos empleados tiene cada oficina.
+SELECT Empleados.CodigoOficina, COUNT(Empleados.CodigoEmpleado) from Empleados
+JOIN Oficinas O on Empleados.CodigoOficina = O.CodigoOficina
+GROUP BY Empleados.CodigoOficina
+
+-- 6 Mostrar el precio medio de todos los productos que empiezen por A
+
+SELECT round(AVG(PrecioVenta),2) AS "Precio medio" from Productos
+WHERE Nombre like "a%";
+-- 7 Mostrar la cantidad total de productos de cada pedido.
+-- 8 Mostrar el nombre y apellidos de los empleados que no tienen jefe
+SELECT Nombre, Apellido1, Apellido2
+FROM Empleados
+WHERE CodigoJefe IS NULL;
+-- 20 Mostrar el nombre y apellido de los clientes que no han echo ningún pedido
+SELECT NombreContacto, ApellidoContacto from Clientes
+WHERE CodigoCliente NOT IN
+      (SELECT CodigoCliente from Pedidos);
+//CORREGIDO
+
+-- 21 Mostrar el nombre del cliente que ha realizado el mayor pago.
+SELECT NombreCliente FROM Clientes
+WHERE Codigocliente =
+      (SELECT CodigoCliente
+          FROM Pagos
+          WHERE Cantidad =
+                (SELECT MAX(Cantidad)
+                    FROM Pagos)):
+-- 22 Mostrar el nombre y apellidos de los empleados junto al nombre de la ciudad donde tiene su oficina
+SELECT Empleados.Nombre, Empleados.Apellido1, Ciudad from Empleados
+JOIN Oficinas O on Empleados.CodigoOficina = O.CodigoOficina;
+
+-- 23 Muestra el nombre y apellidos de todos
+-- los Clientes y la media de sus pagos.
+SELECT Clientes.NombreContacto, ApellidoContacto, AVG(Cantidad) from Clientes
+JOIN Pagos P on Clientes.CodigoCliente = P.CodigoCliente
+GROUP BY Clientes.NombreContacto;
+-- 24 Mostrar el nombre y código del producto y el
+-- nombre y la descripción de su Gama de los productos que
+-- nunca han sido comprados
+-- Filtrar para que solo muestre la gama de los frutales que empiezen por H
+SELECT Productos.Nombre, Productos.CodigoProducto, GP.DescripcionTexto
+FROM Productos JOIN GamasProductos GP on Productos.Gama = GP.Gama
+WHERE Productos.Gama = "Frutales"
+    AND Productos.Nombre Like "H%"
+    AND Productos.CodigoProducto NOT IN
+        (SELECT CodigoProducto
+            FROM DetallePedidos);
+-- 25 Mostrar el codigo, nombre, cantidad y fecha de los productos Comprados por el Cliente Tendo Garden
+-- ordenados de mayor a menor cantidad.
+SELECT Productos.Nombre, Productos.CodigoProducto, DetallePedidos.Cantidad, Pedidos.FechaPedido
+FROM Productos
+JOIN DetallePedidos ON Productos.CodigoProducto = DetallePedidos.CodigoProducto
+JOIN Pedidos ON Pedidos.CodigoPedido = DetallePedidos.CodigoPedido
+WHERE Pedidos.CodigoCliente =
+      (SELECT CodigoCliente FROM Clientes
+          WHERE NombreCliente = "Tendo Garden")
+ORDER BY DetallePedidos.cantidad DESC;
+-- 26 Mostrar el codigo y nombre de los empleados junto al número de clientes que representa y
+-- al gasto total de los clientes a los que representa.
+-- Filtrar para que solo se muestren los representantes con más de 3 clientes
+-- Ordenar por gasto total de mayor a menor
+SELECT emple.CodigoEmpleado, emple.Nombre, COUNT(cli.CodigoCliente), SUM(cli.LimiteCredito)
+FROM Empleados emple
+JOIN Clientes cli ON emple.CodigoEmpleado = cli.CodigoEmpleadoRepVentas
+GROUP BY emple.CodigoEmpleado
+HAVING COUNT(cli.CodigoCliente) > 3
+ORDER BY SUM(cli.LimiteCredito) DESC;
